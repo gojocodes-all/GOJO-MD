@@ -11,6 +11,7 @@ const qrcode = require('qrcode-terminal');
 const { loadCommands } = require('./lib/loader');
 const { parseMessage } = require('./lib/parser');
 const { createContext } = require('./lib/context');
+const { getIncomingMessages } = require('./lib/upsert');
 const config = require('./config');
 
 let commands = loadCommands();
@@ -51,34 +52,47 @@ async function startBot() {
     }
   });
 
-  sock.ev.on('messages.upsert', async ({ messages, type }) => {
-    if (type !== 'notify') return;
-    const raw = messages[0];
-    if (!raw?.message || raw.key.fromMe) return;
+  sock.ev.on('messages.upsert', async (update) => {
+    for (const raw of getIncomingMessages(update)) {
+      try {
+        if (config.autoRead) await sock.readMessages([raw.key]);
 
-    try {
-      if (config.autoRead) await sock.readMessages([raw.key]);
+        const msg = await parseMessage(sock, raw);
+        if (!msg.body || !msg.body.startsWith(config.prefix)) continue;
 
-      const msg = await parseMessage(sock, raw);
-      if (!msg.body || !msg.body.startsWith(config.prefix)) return;
+        const ctx = await createContext(sock, msg, commands);
+        const commandName = msg.command.toLowerCase();
+        const command = commands.get(commandName) || [...commands.values()].find(c => c.aliases?.includes(commandName));
 
-      const ctx = await createContext(sock, msg, commands);
-      const commandName = msg.command.toLowerCase();
-      const command = commands.get(commandName) || [...commands.values()].find(c => c.aliases?.includes(commandName));
+        if (!command) {
+          await ctx.reply(`Unknown command: ${commandName}\nUse ${config.prefix}menu`);
+          continue;
+        }
 
-      if (!command) return ctx.reply(`Unknown command: ${commandName}\nUse ${config.prefix}menu`);
+        if (config.mode === 'private' && !ctx.isOwner) continue;
+        if (command.ownerOnly && !ctx.isOwner) {
+          await ctx.reply('Owner-only command.');
+          continue;
+        }
+        if (command.groupOnly && !ctx.isGroup) {
+          await ctx.reply('This command only works in groups.');
+          continue;
+        }
+        if (command.adminOnly && !ctx.isAdmin) {
+          await ctx.reply('You need to be a group admin.');
+          continue;
+        }
+        if (command.botAdmin && !ctx.isBotAdmin) {
+          await ctx.reply('Make the bot admin first.');
+          continue;
+        }
 
-      if (config.mode === 'private' && !ctx.isOwner) return;
-      if (command.ownerOnly && !ctx.isOwner) return ctx.reply('Owner-only command.');
-      if (command.groupOnly && !ctx.isGroup) return ctx.reply('This command only works in groups.');
-      if (command.adminOnly && !ctx.isAdmin) return ctx.reply('You need to be a group admin.');
-      if (command.botAdmin && !ctx.isBotAdmin) return ctx.reply('Make the bot admin first.');
-
-      if (config.autoTyping) await sock.sendPresenceUpdate('composing', msg.chat);
-      await command.run(ctx);
-    } catch (err) {
-      console.error('Command error:', err);
-      await sock.sendMessage(raw.key.remoteJid, { text: 'Bot error. Check Termux logs.' }, { quoted: raw });
+        if (config.autoTyping) await sock.sendPresenceUpdate('composing', msg.chat);
+        await command.run(ctx);
+      } catch (err) {
+        console.error('Command error:', err);
+        await sock.sendMessage(raw.key.remoteJid, { text: 'Bot error. Check Termux logs.' }, { quoted: raw });
+      }
     }
   });
 }
