@@ -11,6 +11,7 @@ const qrcode = require('qrcode-terminal');
 const { loadCommands } = require('./lib/loader');
 const { parseMessage } = require('./lib/parser');
 const { createContext } = require('./lib/context');
+const { isCommandMessage } = require('./lib/command');
 const { getIncomingMessages } = require('./lib/upsert');
 const config = require('./config');
 
@@ -55,10 +56,10 @@ async function startBot() {
   sock.ev.on('messages.upsert', async (update) => {
     for (const raw of getIncomingMessages(update)) {
       try {
-        if (config.autoRead) await sock.readMessages([raw.key]);
-
         const msg = await parseMessage(sock, raw);
-        if (!msg.body || !msg.body.startsWith(config.prefix)) continue;
+        if (!isCommandMessage(msg, config.prefix)) continue;
+
+        if (config.autoRead) await sock.readMessages([raw.key]);
 
         const ctx = await createContext(sock, msg, commands);
         const commandName = msg.command.toLowerCase();
