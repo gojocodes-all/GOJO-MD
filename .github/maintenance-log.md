@@ -1,5 +1,32 @@
 # Maintenance log
 
+## 2026-10-04 — Limit read receipts to command messages
+
+### Rationale
+
+When `AUTO_READ=true`, the message handler marked every incoming WhatsApp message as read before checking whether it used the configured command prefix. This contradicted the documented command-only setting and could acknowledge ordinary chat messages that the bot otherwise ignores.
+
+### Files changed
+
+- `index.js` — identify command messages before sending optional read receipts.
+- `lib/command.js` — centralize the command-prefix predicate.
+- `test/command.test.js` — cover configured prefixes and ignored ordinary, empty, and malformed messages.
+- `.github/maintenance-log.md` — record this maintenance work.
+
+### Validation
+
+- Ran `npm test`.
+- Ran `node --check` across application, command, library, and test files.
+- Ran `git diff --check` and reviewed the complete diff.
+
+### Risk
+
+Low. Command dispatch and command read receipts are preserved. Only non-command messages stop being marked as read when `AUTO_READ` is enabled.
+
+### Rollback
+
+Revert the pull request's squash commit to restore read receipts before command filtering.
+
 ## 2026-09-29 — Document setup and protect local bot state
 
 ### Rationale
