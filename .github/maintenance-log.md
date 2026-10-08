@@ -1,5 +1,34 @@
 # Maintenance log
 
+## 2026-10-08 — Support reply-based moderation targets
+
+### Rationale
+
+The README documented that `kick`, `promote`, and `demote` accept either a mention or a reply, but the implementation only read the first explicit mention. Replying to a participant's message without tagging them always produced the missing-target response.
+
+### Files changed
+
+- `lib/message.js` — centralize supported message text and reply-context extraction.
+- `lib/parser.js` — preserve the replied-to participant alongside quoted content and mentions.
+- `lib/target.js` — resolve a moderation target consistently, preferring an explicit mention over a reply.
+- `commands/group/kick.js`, `promote.js`, and `demote.js` — use the shared resolver and accurate prompts.
+- `test/message-target.test.js` — cover message context, mention precedence, reply fallback, and missing targets.
+- `.github/maintenance-log.md` — record this maintenance work.
+
+### Validation
+
+- Ran `npm test` (seven tests).
+- Ran `node --check` across all application, command, library, and test JavaScript files.
+- Verified the branch tree and reviewed the complete diff.
+
+### Risk
+
+Low. Existing explicit-mention behavior and permission checks are preserved. The commands gain the documented reply fallback; no dependency, authentication, session, or network behavior changes.
+
+### Rollback
+
+Revert the pull request's squash commit to restore mention-only moderation targeting.
+
 ## 2026-10-04 — Limit read receipts to command messages
 
 ### Rationale
