@@ -18,7 +18,7 @@ The README documented that `kick`, `promote`, and `demote` accept either a menti
 ### Validation
 
 - Ran `npm test` (seven tests).
-- Ran `node --check` across all application, command, library, and test JavaScript files.
+- Ran `node --check` across every changed or added application, command, library, and test JavaScript file.
 - Verified the branch tree and reviewed the complete diff.
 
 ### Risk
