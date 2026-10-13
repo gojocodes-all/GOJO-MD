@@ -6,8 +6,13 @@
   "type": "commonjs",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js",
-    "test": "node --test"
+    "dev": "node --watch index.js",
+    "test": "node --test",
+    "check:syntax": "node scripts/check-syntax.js",
+    "validate": "npm run check:syntax && npm test"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
@@ -18,8 +23,5 @@
     "openai": "^4.104.0",
     "pino": "^9.6.0",
     "qrcode-terminal": "^0.12.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.9"
   }
 }

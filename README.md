@@ -20,7 +20,7 @@ answer prompts through the OpenAI API.
 
 ## Requirements
 
-- Node.js and npm
+- Node.js 20 or newer and npm
 - Git
 - A WhatsApp account that can link a new device
 - A terminal where you can scan the displayed QR code
@@ -31,7 +31,7 @@ answer prompts through the OpenAI API.
 ```bash
 git clone https://github.com/gojocodes-all/GOJO-MD.git
 cd GOJO-MD
-npm install
+npm ci
 cp .env.example .env
 npm start
 ```
@@ -54,7 +54,7 @@ pkg update
 pkg install nodejs git -y
 git clone https://github.com/gojocodes-all/GOJO-MD.git
 cd GOJO-MD
-npm install
+npm ci
 cp .env.example .env
 npm start
 ```
@@ -126,15 +126,17 @@ under `commands/`; the loader discovers JavaScript command files automatically.
 
 ## Development and validation
 
-Run the regression tests with:
+Install the exact dependency graph and run the complete validation gate with:
 
 ```bash
-npm test
+npm ci
+npm run validate
 ```
 
-Before opening a pull request, also syntax-check changed JavaScript files with
-`node --check <file>`. A live bot connection is not required by the current
-unit tests, but starting the bot can create or update sensitive files in
+`npm run validate` syntax-checks every application, command, library, script,
+and test JavaScript file before running the regression suite. Pull requests and
+pushes to `Main` run the same command in GitHub Actions. A live bot connection
+is not required, but starting the bot can create or update sensitive files in
 `session/`.
 
 ## Troubleshooting
