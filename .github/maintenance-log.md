@@ -1,5 +1,35 @@
 # Maintenance log
 
+## 2026-10-13 — Add reproducible installation and hosted validation
+
+### Rationale
+
+The repository had regression tests but no dependency lockfile, aggregate validation command, or hosted pull-request check. Contributors could resolve different transitive packages, and JavaScript syntax or test regressions could reach `Main` without an automated gate. Auditing the first locked install also identified three high-severity vulnerabilities in the development-only `nodemon` watcher chain, even though supported Node.js releases provide watch mode directly.
+
+### Files changed
+
+- `package-lock.json` — lock the complete npm dependency graph for reproducible installs without the vulnerable watcher dependency.
+- `scripts/check-syntax.js` — syntax-check every repository JavaScript source and test without starting the bot.
+- `package.json` — use Node.js's native watch mode, declare the supported runtime baseline, and expose `check:syntax` and `validate` commands.
+- `.github/workflows/ci.yml` — install locked dependencies, run validation, and reject high-severity dependency advisories for pull requests and pushes to `Main`.
+- `README.md` — document reproducible setup and the shared local/CI quality gate.
+- `.github/maintenance-log.md` — record this maintenance work.
+
+### Validation
+
+- Ran `npm ci` from the generated lockfile.
+- Ran `npm run validate` (repository-wide syntax checks and seven regression tests).
+- Ran `npm audit --offline --audit-level=high` against the installed lockfile (zero vulnerabilities).
+- Ran `git diff --check` and reviewed the complete diff.
+
+### Risk
+
+Low. Bot commands, connection handling, configuration values, credentials, and production runtime behavior are unchanged. Development restarts use the equivalent watch mode built into the declared Node.js baseline, and the workflow uses read-only repository permissions.
+
+### Rollback
+
+Revert the pull request's squash commit to restore `nodemon`, remove the lockfile and automated validation, and restore the previous install instructions.
+
 ## 2026-10-08 — Support reply-based moderation targets
 
 ### Rationale
