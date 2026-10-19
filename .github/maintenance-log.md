@@ -1,5 +1,43 @@
 # Maintenance log
 
+## 2026-10-19 — Enforce private mode before command lookup
+
+### Rationale
+
+Private mode is documented to ignore commands from non-owners, but command
+lookup ran before the owner check. A non-owner who sent an unknown prefixed
+command still received an "Unknown command" reply, exposing bot activity and
+contradicting the configured access mode.
+
+### Files changed
+
+- `lib/command.js` — centralize the public/private sender-access decision.
+- `index.js` — ignore non-owner traffic before resolving commands or replying
+  to unknown commands.
+- `test/command.test.js` — cover owner and non-owner behavior in public and
+  private modes.
+- `.github/maintenance-log.md` — record this maintenance work.
+
+### Validation
+
+- `npm ci`
+- `npm run validate`
+- `npm audit --audit-level=high`
+- `git diff --check`
+- Reviewed the complete diff for access-control ordering, command behavior,
+  security, backward compatibility, and repository conventions.
+
+### Risk
+
+Low. Public mode, owner commands, known-command resolution, aliases, permission
+checks, read receipts, and dependencies are unchanged. In private mode, only
+the previously unintended response to non-owner traffic is removed.
+
+### Rollback
+
+Revert this pull request to restore command lookup before the private-mode
+owner check.
+
 ## 2026-10-13 — Add reproducible installation and hosted validation
 
 ### Rationale
