@@ -11,7 +11,7 @@ const qrcode = require('qrcode-terminal');
 const { loadCommands } = require('./lib/loader');
 const { parseMessage } = require('./lib/parser');
 const { createContext } = require('./lib/context');
-const { isCommandMessage } = require('./lib/command');
+const { canProcessCommand, isCommandMessage } = require('./lib/command');
 const { getIncomingMessages } = require('./lib/upsert');
 const config = require('./config');
 
@@ -62,6 +62,8 @@ async function startBot() {
         if (config.autoRead) await sock.readMessages([raw.key]);
 
         const ctx = await createContext(sock, msg, commands);
+        if (!canProcessCommand(config.mode, ctx.isOwner)) continue;
+
         const commandName = msg.command.toLowerCase();
         const command = commands.get(commandName) || [...commands.values()].find(c => c.aliases?.includes(commandName));
 
@@ -70,7 +72,6 @@ async function startBot() {
           continue;
         }
 
-        if (config.mode === 'private' && !ctx.isOwner) continue;
         if (command.ownerOnly && !ctx.isOwner) {
           await ctx.reply('Owner-only command.');
           continue;
