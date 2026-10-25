@@ -1,5 +1,32 @@
 # Maintenance log
 
+## 2026-10-25 — Normalize multi-device JIDs for permission checks
+
+### Rationale
+
+Baileys can identify a sender with a device-qualified JID such as `234…:19@s.whatsapp.net`, while group metadata uses the normalized `234…@s.whatsapp.net` form. The context builder normalized only the bot JID, so the same person could lose owner and group-administrator recognition when a message included a device suffix. Owner-only and administrator commands were then rejected incorrectly.
+
+### Files changed
+
+- `lib/context.js` — normalize sender, bot and participant JIDs before extracting the owner number or comparing group roles.
+- `test/context.test.js` — reproduce a device-qualified owner/admin sender and verify owner, sender-admin and bot-admin context flags.
+- `.github/maintenance-log.md` — record this maintenance work.
+
+### Validation
+
+- Reproduced the owner/admin recognition failure with the focused regression test before applying the fix.
+- Ran `npm run validate`: all 31 JavaScript files passed syntax checks and all 10 Node.js tests passed.
+- Ran `npm audit --audit-level=high` with zero vulnerabilities and `git diff --check` with no whitespace errors.
+- Reviewed the complete diff for permission boundaries, security, backward compatibility and repository conventions.
+
+### Risk
+
+Low. Command definitions, access requirements, configuration, sessions and network behavior are unchanged. Existing normalized JIDs compare as before; device-qualified forms now resolve to the same WhatsApp user before permission checks.
+
+### Rollback
+
+Revert this pull request's squash commit to restore literal sender-JID permission comparisons and remove the focused regression test.
+
 ## 2026-10-19 — Enforce private mode before command lookup
 
 ### Rationale
