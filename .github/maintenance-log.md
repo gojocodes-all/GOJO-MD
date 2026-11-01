@@ -1,5 +1,47 @@
 # Maintenance log
 
+## 2026-11-01 — Refresh the vulnerable redirect dependency
+
+### Rationale
+
+The locked `follow-redirects` 1.16.1 release began failing the repository's
+high-severity dependency audit because custom credentials could be forwarded
+across redirects in a cross-realm configuration. Both the direct Axios
+dependency and Baileys resolve through this lockfile entry. The upstream
+advisory does not claim that Axios 1.20.0 reproduces the issue, but version
+1.16.1 remains in the advisory's affected range and blocks the repository's
+audit gate.
+
+### Files changed
+
+- `package-lock.json` — resolve `follow-redirects` 1.16.2 within the existing
+  Axios dependency range while preserving the HTTPS source for Baileys'
+  `libsignal` dependency.
+- `.github/maintenance-log.md` — record this maintenance work.
+
+### Validation
+
+- Ran `npm ci` from the refreshed lockfile.
+- Ran `npm run validate`: all JavaScript files passed syntax checks and all
+  Node.js tests passed.
+- Ran `npm audit --audit-level=high` with zero vulnerabilities.
+- Verified `npm ls axios follow-redirects` resolves Axios 1.20.0 and
+  `follow-redirects` 1.16.2 without changing direct dependency declarations.
+- Ran `git diff --check` and reviewed the complete diff for install
+  compatibility, security, behavior, and repository conventions.
+
+### Risk
+
+Low. The update is a transitive patch release inside the existing Axios range.
+Application source, direct dependency declarations, commands, configuration,
+sessions, public interfaces, and the HTTPS Git dependency source are unchanged.
+
+### Rollback
+
+Revert this pull request's squash commit to restore the previous lockfile. No
+application data or deployment migration is required, but the high-severity
+audit finding would return.
+
 ## 2026-10-25 — Normalize multi-device JIDs for permission checks
 
 ### Rationale
