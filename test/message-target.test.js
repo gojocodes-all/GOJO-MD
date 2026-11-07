@@ -18,6 +18,27 @@ test('extracts text and reply context from supported message types', () => {
   assert.equal(getContextInfo({ conversation: '.ping' }), null);
 });
 
+test('extracts commands and context from wrapped message content', () => {
+  const contextInfo = {
+    participant: '2348000000000@s.whatsapp.net',
+    mentionedJid: ['2348111111111@s.whatsapp.net']
+  };
+  const wrapped = {
+    ephemeralMessage: {
+      message: {
+        viewOnceMessageV2: {
+          message: {
+            imageMessage: { caption: '.kick', contextInfo }
+          }
+        }
+      }
+    }
+  };
+
+  assert.equal(getText(wrapped), '.kick');
+  assert.equal(getContextInfo(wrapped), contextInfo);
+});
+
 test('prefers an explicit mention over a replied-to participant', () => {
   assert.equal(
     getModerationTarget({

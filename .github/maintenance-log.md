@@ -1,5 +1,44 @@
 # Maintenance log
 
+## 2026-11-07 — Read commands inside wrapped message content
+
+### Rationale
+
+Baileys places disappearing, view-once, document-caption, and edited message
+content inside protocol wrapper objects. The parser inspected only the outer
+object, so commands and moderation context inside those standard wrappers were
+silently treated as empty.
+
+### Files changed
+
+- `lib/message.js` — normalize Baileys message content before extracting text
+  or reply and mention context.
+- `test/message-target.test.js` — reproduce nested disappearing/view-once
+  command content and verify its moderation context remains available.
+- `.github/maintenance-log.md` — record this maintenance work.
+
+### Validation
+
+- Reproduced the defect with the focused regression test before the fix.
+- Ran `npm run validate`: all JavaScript files passed syntax checks and all
+  Node.js tests passed.
+- Ran `npm audit --audit-level=high` with zero vulnerabilities.
+- Ran `git diff --check` and reviewed the complete diff for message behavior,
+  permission context, security, and backward compatibility.
+
+### Risk
+
+Low. Unwrapped conversations, extended text, images, and videos are extracted
+as before. Wrapped content now follows Baileys' own bounded normalizer before
+the existing field selection; command routing and permission checks are
+unchanged.
+
+### Rollback
+
+Revert this pull request to restore outer-message-only parsing and remove the
+focused regression test. No dependency, configuration, session, or data
+migration is required.
+
 ## 2026-11-01 — Refresh the vulnerable redirect dependency
 
 ### Rationale
