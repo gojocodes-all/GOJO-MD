@@ -1,5 +1,46 @@
 # Maintenance log
 
+## 2026-11-17 — Document contribution and deployment boundaries
+
+### Rationale
+
+The README explained local setup and command usage but did not state that the
+bot is a long-running worker with no HTTP listener, or that linked-device
+credentials depend on a private writable `session/` directory. Contributors
+also had to infer the command-module contract, permission flags, validation
+expectations, and privacy checklist from source files.
+
+### Files changed
+
+- `README.md` — documents the worker deployment model, environment handoff,
+  persistent session requirement, and restart verification.
+- `CONTRIBUTING.md` — records the verified command contract, permission flags,
+  validation commands, secret-handling rules, and pull request checklist.
+- `.github/maintenance-log.md` — records this maintenance decision.
+
+### Validation
+
+- Cross-checked deployment statements against `index.js`, `config.js`,
+  `.env.example`, `.gitignore`, and `package.json`.
+- Cross-checked the command contract and permission flags against the loader,
+  dispatcher, context builder, representative command modules, and tests.
+- Ran `npm ci`, `npm run validate`, `npm audit --audit-level=high`, and
+  `git diff --check`.
+- Reviewed the complete diff for factual accuracy, credential safety,
+  permission guidance, backward compatibility, and repository scope.
+
+### Risk
+
+Low. Documentation only. Runtime code, commands, permissions, dependencies,
+configuration defaults, linked-device state, network behavior, and deployment
+configuration are unchanged.
+
+### Rollback
+
+Revert this pull request's squash commit to remove the contribution guide and
+deployment notes. No runtime, credential, dependency, or data rollback is
+required.
+
 ## 2026-11-07 — Read commands inside wrapped message content
 
 ### Rationale

@@ -112,6 +112,7 @@ ignored.
 ```text
 commands/       Command modules grouped by category
 config.js       Environment parsing and default settings
+CONTRIBUTING.md Command and pull request contribution guidance
 index.js        WhatsApp connection, reconnect, and command dispatch
 lib/context.js  Reply helpers and permission context
 lib/loader.js   Command discovery and reload support
@@ -123,6 +124,9 @@ test/           Node.js regression tests
 Each command module exports its name, optional aliases, description, permission
 flags, and a `run` function. Add new commands to the appropriate category
 under `commands/`; the loader discovers JavaScript command files automatically.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the verified command-module contract,
+permission flags, test expectations, and secret-handling checklist.
 
 ## Development and validation
 
@@ -138,6 +142,26 @@ and test JavaScript file before running the regression suite. Pull requests and
 pushes to `Main` run the same command in GitHub Actions. A live bot connection
 is not required, but starting the bot can create or update sensitive files in
 `session/`.
+
+## Deployment and session state
+
+GOJO-MD is a long-running worker, not an HTTP web service. A deployment must be
+able to run `npm start` continuously and show process logs so the first QR code
+can be scanned. The application does not listen on a port or expose a health
+route.
+
+Baileys writes linked-device credentials to `session/` relative to the process
+working directory. That directory must remain private and writable. On a host
+with an ephemeral filesystem, losing `session/` requires linking the WhatsApp
+account again after a restart; use provider-managed persistent storage if the
+host supports it. Never copy the directory into a public artifact, commit it,
+or print its contents in logs.
+
+Set the variables from `.env.example` through the host's secret or environment
+configuration. Do not deploy a real `.env` file. Before relying on a deployment,
+verify that the process stays running, the initial QR is visible only to an
+authorised operator, a normal command receives a response, and a process restart
+reuses the protected session instead of requesting an unexpected relink.
 
 ## Troubleshooting
 
