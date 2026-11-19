@@ -1,15 +1,13 @@
-const { getModerationTarget } = require('../../lib/target');
-
 module.exports = {
   name: 'kick',
   category: 'group',
-  description: 'Remove a mentioned or replied-to member',
+  description: 'Remove mentioned member',
   groupOnly: true,
   adminOnly: true,
   botAdmin: true,
   run: async (ctx) => {
-    const target = getModerationTarget(ctx.msg);
-    if (!target) return ctx.reply('Mention the person to remove or reply to their message.');
+    const target = ctx.msg.mentions[0];
+    if (!target) return ctx.reply('Tag the person to remove. Example: .kick @user');
     await ctx.sock.groupParticipantsUpdate(ctx.msg.chat, [target], 'remove');
     await ctx.reply('Removed ✅');
   }
